@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>База решений техподдержки</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #f1f4f2; color: #172d29; font: 16px system-ui, sans-serif; }
+header { background: #173b34; color: #fff; padding: 1.5rem max(6vw, 1rem); }
+header a { color: #c9f5dd; }
+main { width: min(61rem, 92%); margin: 2.5rem auto; }
+h1 { font-size: clamp(1.65rem, 4vw, 3rem); margin: .5rem 0; }
+label { display: block; font-weight: 650; margin-bottom: .4rem; }
+input { width: 100%; padding: .8rem; background: white; border: 1px solid #81958d; border-radius: .45rem; font: inherit; }
+article { margin-top: .85rem; border: 1px solid #c9d4cf; background: white; border-radius: .65rem; padding: 1rem 1.35rem; }
+article h2 { margin: .1rem 0 .7rem; font-size: 1.25rem; }
+article p { margin: .4rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<header>
+<a href="/docs">Swagger API</a>
+<h1>База решений техподдержки</h1>
+</header>
+<main>
+<label for="query">Поиск по статьям</label>
+<input id="query" type="search" placeholder="Например, VPN">
+<p id="status" role="status">Загружаю статьи…</p>
+<section id="results" aria-label="Статьи"></section>
+</main>
+<script>
+const query = document.querySelector('#query');
+const status = document.querySelector('#status');
+const results = document.querySelector('#results');
+let posts;
+
+function render() {
+  if (!posts) return;
+  const term = query.value.trim().toLocaleLowerCase('ru');
+  const matches = posts.filter(post =>
+    [post.title, post.symptoms, post.solution].some(value => value.toLocaleLowerCase('ru').includes(term))
+  );
+  results.replaceChildren();
+  status.textContent = matches.length ? 'Найдено: ' + matches.length :
+    posts.length ? 'По этому запросу статей нет.' : 'Пока нет статей. Добавьте первую через Swagger API.';
+  for (const post of matches) {
+    const card = document.createElement('article');
+    const title = document.createElement('h2');
+    const symptoms = document.createElement('p');
+    const solution = document.createElement('p');
+    title.textContent = post.title;
+    symptoms.textContent = 'Симптомы: ' + post.symptoms;
+    solution.textContent = 'Решение: ' + post.solution;
+    card.append(title, symptoms, solution);
+    results.append(card);
+  }
+}
+
+query.addEventListener('input', render);
+fetch('/posts').then(response => {
+  if (!response.ok) throw new Error('API request failed');
+  return response.json();
+}).then(data => {
+  posts = data;
+  render();
+}).catch(() => {
+  status.textContent = 'Не удалось получить статьи. Обновите страницу и проверьте запуск API.';
+});
+</script>
+</body>
+</html>

@@ -1,7 +1,9 @@
 from collections.abc import Iterator
+from secrets import token_urlsafe
 from typing import Annotated
 
 from fastapi import Depends
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -10,6 +12,7 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     database_url: str = "postgresql+psycopg://support:local-support-password@localhost:5432/support"
+    jwt_secret: str = Field(default_factory=lambda: token_urlsafe(48), min_length=32)
 
 
 class Base(DeclarativeBase):

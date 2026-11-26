@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path
 
+from app.auth import CurrentUser
 from app.database import Database
 from app.models import Post
 from app.repository import Repository
@@ -22,13 +23,13 @@ def read_post(post_id: PostId, db: Database):
 
 
 @router.post("", status_code=201, response_model=PostView, summary="Создать пост")
-def create_post(data: PostInput, db: Database):
+def create_post(data: PostInput, db: Database, current_id: CurrentUser):
     with db.begin():
         return Repository(db, Post).create(data.model_dump())
 
 
 @router.put("/{post_id}", response_model=PostView, summary="Заменить пост")
-def update_post(post_id: PostId, data: PostInput, db: Database):
+def update_post(post_id: PostId, data: PostInput, db: Database, current_id: CurrentUser):
     repository = Repository(db, Post)
     with db.begin():
         repository.require(post_id, lock=True)
@@ -36,6 +37,6 @@ def update_post(post_id: PostId, data: PostInput, db: Database):
 
 
 @router.delete("/{post_id}", status_code=204, summary="Удалить пост")
-def delete_post(post_id: PostId, db: Database):
+def delete_post(post_id: PostId, db: Database, current_id: CurrentUser):
     with db.begin():
         db.delete(Repository(db, Post).require(post_id, lock=True))
