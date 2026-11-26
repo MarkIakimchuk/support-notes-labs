@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.posts import router as posts_router
 
 app = FastAPI(title="База решений техподдержки")
 
@@ -16,3 +17,6 @@ def about():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+app.include_router(posts_router)
