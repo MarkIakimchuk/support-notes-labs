@@ -3,3 +3,23 @@ services:
     build: .
     ports:
       - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://support:${POSTGRES_PASSWORD:-local-support-password}@db:5432/support
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: support
+      POSTGRES_USER: support
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-support-password}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "support", "-d", "support"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+volumes:
+  database:
